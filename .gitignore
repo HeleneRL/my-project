@@ -1,0 +1,18 @@
+# virtual environments
+.venv/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# compiled or temporary files
+__pycache__/
+*.pyc
+
+# data or large binaries
+data/
+*.csv
+*.bin
+*.zip
+
+# editor settings
+.vscode/
