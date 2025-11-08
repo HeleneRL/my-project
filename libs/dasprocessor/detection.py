@@ -160,7 +160,7 @@ def main():
     myrun["offset_in_samples"] += meta["signal_starting_points"][
         meta["signal_sequence"].index(band)]
     #for it in range(300, 312, 12):
-    for it in [364]: 
+    for it in [220]: 
         wantedchans = slice(it, it+12)
         mydata = load_interrogator_data(
                 r"D:\DASComms_25kHz_GL_2m\20240503\dphi",
