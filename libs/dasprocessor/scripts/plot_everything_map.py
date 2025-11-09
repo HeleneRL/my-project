@@ -15,15 +15,21 @@ from dasprocessor.plot.map_layers import (
 # IMPORTANT: load the boat track points (lat, lon, dt) from here:
 from dasprocessor.plot.source_track import load_source_points_for_run
 
-from dasprocessor.bearing_tools import get_cached_channel_gps_for_run
+from dasprocessor.channel_gps import compute_channel_positions
 from dasprocessor.constants import get_run
 
 
-def center_for_gps_or_run(gps: np.ndarray, run_number: int, date_str="2024-05-03"):
-    """Return map center (lat, lon) from GPS array or run metadata."""
-    if gps.size > 0:
-        mid = gps[gps.shape[0] // 2]
-        return float(mid[0]), float(mid[1])
+def center_for_gps_or_run(gps: dict, run_number: int, date_str="2024-05-03"):
+    """Return map center (lat, lon) from GPS dictionary or run metadata."""
+    if gps:
+        # Sort channels and pick the middle one
+        keys = sorted(gps.keys())
+        mid_key = keys[len(keys) // 2]
+        mid_entry = gps[mid_key]
+        lat, lon = mid_entry[0], mid_entry[1]  # assuming [lat, lon, alt]
+        return float(lat), float(lon)
+    
+    # fallback to metadata
     run = get_run(date_str, run_number)
     return float(run.get("map_center_lat", 0.0)), float(run.get("map_center_lon", 0.0))
 
@@ -34,8 +40,9 @@ def main():
     csv_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\source-position.csv")
     centers = [119, 122, 125, 128, 203, 206, 209, 212, 263, 266, 269, 272, 347, 350, 353, 356]
     aperture_len = 15
+    # Clear GPS cache to ensure fresh load
 
-    gps = get_cached_channel_gps_for_run(run_number)
+    gps = compute_channel_positions(geojson_path, channel_count=1200, channel_distance=1.02)
     lat0, lon0 = center_for_gps_or_run(gps, run_number)
 
     m = folium.Map(location=[lat0, lon0], zoom_start=15, tiles="OpenStreetMap")

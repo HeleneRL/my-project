@@ -13,7 +13,7 @@ from dasprocessor.bearing_tools import (
 )
 from dasprocessor.constants import get_run
 
-from dasprocessor.scripts.plot_run_source_track import load_source_points_for_run, build_source_track_layer, build_transmission_points_layer
+from dasprocessor.plot.source_track import load_source_points_for_run, build_source_track_layer, build_transmission_points_layer
 
 csv_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\source-position.csv")
 run_number = 2

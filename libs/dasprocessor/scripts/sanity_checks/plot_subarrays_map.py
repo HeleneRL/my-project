@@ -14,8 +14,8 @@ from dasprocessor.constants import get_run
 
 def main():
     run_number = 2
-    centers = [112, 208, 268, 552]
-    aperture_len = 9
+    centers = [119,122, 125, 128,203, 206, 209, 212, 263, 266, 269, 272, 347, 350, 353, 356]
+    aperture_len = 15
 
     subarrays = build_subarrays(centers, aperture_len, run_number)
     gps = get_cached_channel_gps_for_run(run_number)

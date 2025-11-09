@@ -10,11 +10,12 @@ import folium
 from dasprocessor.constants import get_run
 from dasprocessor.bearing_tools import (
     build_subarrays,
-    get_cached_channel_gps_for_run,
     subarray_centers_and_headings,
 )
 
+from dasprocessor.channel_gps import compute_channel_positions
 
+from dasprocessor.channel_segment_heading import channel_heading_and_center
 
 
 
@@ -94,7 +95,7 @@ def add_cable_layout_layer(
 
 def add_channel_positions_layer(
     m: folium.Map,
-    gps: np.ndarray,
+    gps: dict,
     name: str = "Channel GPS (interp)",
     color: str = "#cc3300",
     show: bool = True,
@@ -103,31 +104,36 @@ def add_channel_positions_layer(
 ) -> folium.FeatureGroup:
     """Plot all channel GPS positions as a polyline + optional thinned markers."""
     layer = folium.FeatureGroup(name=name, show=show)
-    if gps.size == 0:
+    if not gps:
         layer.add_to(m)
         return layer
 
-    coords = [(float(row[0]), float(row[1])) for row in gps]
+    items = sorted(gps.items())  # List[Tuple[int, List[float]]]
+    coords = [(float(v[0]), float(v[1])) for _, v in items]
     folium.PolyLine(coords, color=color, weight=2, opacity=0.8).add_to(layer)
 
-    for idx in range(0, gps.shape[0], draw_every):
-        lat, lon = gps[idx, 0], gps[idx, 1]
-        alt = gps[idx, 2] if gps.shape[1] > 2 else np.nan
+    for pos in range(0, len(items), draw_every):
+        ch, vals = items[pos]
+        lat = float(vals[0])
+        lon = float(vals[1])
+        alt = float(vals[2]) if len(vals) > 2 else float("nan")
+
         folium.CircleMarker(
             [lat, lon],
             radius=2,
             color=color,
             fill=True,
             fill_opacity=0.9,
-            tooltip=f"Ch {idx} (alt={alt:.1f} m)" if np.isfinite(alt) else f"Ch {idx}",
+            tooltip=f"Ch {ch} (alt={alt:.1f} m)" if np.isfinite(alt) else f"Ch {ch}",
         ).add_to(layer)
-        if label_every and (idx % label_every == 0):
+
+        if label_every and (pos % label_every == 0):
             folium.map.Marker(
                 [lat, lon],
                 icon=folium.DivIcon(
                     icon_size=(40, 12),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size:10px; color:{color}; font-weight:bold;">{idx}</div>',
+                    html=f'<div style="font-size:10px; color:{color}; font-weight:bold;">{ch}</div>',
                 ),
             ).add_to(layer)
 
@@ -151,8 +157,26 @@ def add_subarray_centers_layer(
     """Add markers + heading lines for all subarrays."""
     layer = folium.FeatureGroup(name=name, show=show)
     subarrays = build_subarrays(centers, aperture_len, run_number)
-    gps = get_cached_channel_gps_for_run(run_number)
-    meta = subarray_centers_and_headings(subarrays, gps)
+    cable_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\cable-layout.json")
+    gps = compute_channel_positions(cable_path, channel_count=1200, channel_distance=1.02)
+    meta = {}
+    for center_ch, ch_list in subarrays.items():
+        if not ch_list:
+            # skip empty lists (or raise if that's unexpected)
+            continue
+
+        first_ch = ch_list[0]
+        last_ch  = ch_list[-1]
+
+        heading_deg, (lat_center, lon_center, _alt_center) = channel_heading_and_center(
+            first_ch, last_ch, gps
+        )
+
+        meta[center_ch] = {
+            "center_lat": float(lat_center),
+            "center_lon": float(lon_center),
+            "heading_deg": float(heading_deg),
+        }
     run = get_run(DATE_STR, run_number)
     aperture_length_m = (aperture_len - 1) * float(run["channel_distance"])
 

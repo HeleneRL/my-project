@@ -15,7 +15,7 @@ from .gnss import interpolate_coordinates  # uses cable geometry distances via G
 
 # ---------- Basics & helpers ----------
 
-SAMPLE_RATE = 25_000.0  # Hz
+SAMPLE_RATE = get_run("2024-05-03", 1)["sample_rate"]  # e.g. 25_000.0  # Hz
 EARTH_R = 6_378_000.0   # m (consistent with your gnss.py default)
 DEG = 180.0 / math.pi
 
@@ -24,6 +24,8 @@ def _normalize_arrivals(d: Mapping[str, Mapping[str, Union[int, float]]]
                         ) -> Dict[int, Dict[int, int]]:
     """
     Convert a JSON-loaded dict with string keys to int->int->int.
+
+    channels and packet indices are strings in JSON and integers after running this function.
     """
     out: Dict[int, Dict[int, int]] = {}
     for ch_s, inner in d.items():
@@ -51,6 +53,8 @@ def seconds_from_samples(samples: Union[int, float, np.ndarray]) -> np.ndarray:
 
 
 def clamp(x: np.ndarray, lo: float, hi: float) -> np.ndarray:
+
+    """Clamp array values to [lo, hi]."""
     return np.minimum(np.maximum(x, lo), hi)
 
 
@@ -84,8 +88,8 @@ def build_subarrays(center_channels: Sequence[int],
     half = (aperture_len - 1) // 2
     subarrays: Dict[int, List[int]] = {}
     for c in center_channels:
-        start = max(0, c - half)
-        stop = min(ch_count - 1, c + half)
+        start = max(0, c - half) # cap to 0 channel
+        stop = min(ch_count - 1, c + half) # cap to last channel
         subarrays[c] = list(range(start, stop + 1))
     return subarrays
 
@@ -97,6 +101,8 @@ def _bearing_deg_from_two_gps(p1: Tuple[float, float],
     """
     Bearing (deg from North, clockwise) from p1 (lat,lon) to p2 (lat,lon).
     Uses great-circle initial bearing formula.
+    returns bearing in [0, 360). 
+    0° = North, 90° = East, etc.
     """
     lat1 = math.radians(p1[0])
     lat2 = math.radians(p2[0])
@@ -112,6 +118,7 @@ def _local_xy_m(lat: np.ndarray, lon: np.ndarray,
     """
     Equirectangular local projection (meters) around (lat0,lon0).
     Returns (x_east_m, y_north_m).
+    you get a local tangent plane approximation around (lat0, lon0).
     """
     lat = np.asarray(lat, dtype=float)
     lon = np.asarray(lon, dtype=float)
@@ -121,6 +128,11 @@ def _local_xy_m(lat: np.ndarray, lon: np.ndarray,
     return dx, dy
 
 
+
+#there is something wrong with this function, the channels are not correctly placed along the cable
+# i thought the issue was in lat lon order, but swapping only made it worse
+# depth measurments are also noisy as fuck!!! look into this
+# the issue is that the channels dont seem evenly spaced along the cable
 def channel_gps_for_run(run_number: int
                         ) -> np.ndarray:
     """
@@ -138,6 +150,7 @@ def channel_gps_for_run(run_number: int
     # Compute cumulative distance along cable polyline in gnss.py:
     # We reuse interpolate_coordinates which expects distances and knowns.
     known_latlonalt = np.asarray(cable_gps, dtype=float)
+    
     known_dists = np.zeros(known_latlonalt.shape[0])
     # Derive distances via the same method gnss.distance_gps uses:
     # (We could re-import it, but interpolate_coordinates only needs
@@ -155,10 +168,12 @@ def channel_gps_for_run(run_number: int
                                   input_cs="GPS",
                                   output_cs="GPS")
     # gps shape (ch_count, 3) with [lat, lon, alt]
-    gps = gps[:, [1, 0, 2]] # swap to (lat, lon, alt), all was flipped 
+    gps = gps[:, [1, 0, 2]]  # swap to (lat, lon, alt), all was flipped
     return gps
 
 
+
+#the headings seem correct, but unsure if the positions are correct due to the above function
 def subarray_centers_and_headings(subarrays: Mapping[int, Sequence[int]],
                                   gps_per_channel: np.ndarray
                                   ) -> Dict[int, Dict[str, Union[float, Tuple[float, float]]]]:
@@ -185,9 +200,9 @@ def subarray_centers_and_headings(subarrays: Mapping[int, Sequence[int]],
         lat1, lon1 = gps_per_channel[ch_first, 0], gps_per_channel[ch_first, 1]
         lat2, lon2 = gps_per_channel[ch_last, 0], gps_per_channel[ch_last, 1]
 
-        # center point = midpoint of endpoints (good enough at subarray scale)
-        center_lat = float(0.5 * (lat1 + lat2))
-        center_lon = float(0.5 * (lon1 + lon2))
+        # center point of subarray
+        center_lat = float((lat1 + lat2) / 2)
+        center_lon = float((lon1 + lon2) / 2)
         heading_deg = _bearing_deg_from_two_gps((lat1, lon1), (lat2, lon2))
 
         out[c] = {"center_lat": center_lat,
@@ -591,6 +606,29 @@ def estimate_bearings_for_packets(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ---------- Bearing-ray building & intersections ----------
 
 from itertools import product
@@ -878,6 +916,11 @@ def get_cached_channel_gps_for_run(run_number: int) -> np.ndarray:
     if run_number not in _GPS_CACHE:
         _GPS_CACHE[run_number] = channel_gps_for_run(run_number)
     return _GPS_CACHE[run_number]
+
+def clear_gps_cache() -> None:
+    """Empty the cached channel GPS results."""
+    _GPS_CACHE.clear()
+
 
 
 # ---------- Packet selection (coverage-based) ----------
