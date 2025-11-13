@@ -47,10 +47,15 @@ def main():
         root / "peaks-100-112-run2.json",
         root / "peaks-112-124-run2.json",
         root / "peaks-124-136-run2.json",
+        root / "peaks-136-148-run2.json",
         root / "peaks-196-208-run2.json",
         root / "peaks-208-220-run2.json",
+        root / "peaks-220-232-run2.json",
+        root / "peaks-232-244-run2.json",
+        root / "peaks-244-256-run2.json",
         root / "peaks-256-268-run2.json",
         root / "peaks-268-280-run2.json",
+        root / "peaks-328-340-run2.json",
         root / "peaks-340-352-run2.json",
         root / "peaks-352-364-run2.json",
         root / "peaks-364-376-run2.json",
@@ -61,7 +66,7 @@ def main():
     print(f"\n✅ Merged {len(arrivals)} channels")
 
     # --- Save merged file ---
-    merged_path = root / "peaks-merged-run2.json"
+    merged_path = root / "peaks-merged-run2_v2.json"
     with open(merged_path, "w") as fh:
         json.dump(
             {str(ch): {str(pk): int(sm) for pk, sm in pks.items()} for ch, pks in arrivals.items()},

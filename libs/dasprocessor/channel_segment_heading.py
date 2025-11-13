@@ -75,6 +75,8 @@ def channel_heading_and_center(
 
 # ------------------------------------------------------------
 
+#mostly for testing and sanity checking
+
 def annotate_segments_with_heading(
     doa_json_path: str | Path,
     output_path: str | Path

@@ -129,6 +129,8 @@ def _local_xy_m(lat: np.ndarray, lon: np.ndarray,
 
 
 
+#these are commented out as they were not functioning correctly, and i have implemented better versions in channel_gps.py and channel_segment_headings.py
+'''
 #there is something wrong with this function, the channels are not correctly placed along the cable
 # i thought the issue was in lat lon order, but swapping only made it worse
 # depth measurments are also noisy as fuck!!! look into this
@@ -210,6 +212,7 @@ def subarray_centers_and_headings(subarrays: Mapping[int, Sequence[int]],
                   "heading_deg": heading_deg}
     return out
 
+'''
 
 # ---------- Bearing estimation from TDOA slope ----------
 

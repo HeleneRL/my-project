@@ -3,7 +3,14 @@ import math
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# ---------- small geo helpers (no dependencies) ----------
+'''
+this module provides functions to compute GPS positions for channels along a cable layout defined in a GeoJSON file.
+it accounts for missing altitude data by interpolating values, and allows for flexible origin placement for channel 0.
+
+
+'''
+
+
 
 def _deg2rad(x: float) -> float:
     return x * math.pi / 180.0
@@ -64,7 +71,7 @@ def _interpolate_alts_inplace(alts: List[float], treat_zero_as_missing: bool = T
                 alts[a + k] = _interp(za, zb, t)
         j += 1
 
-# ---------- core: sample polyline and assign channels ----------
+# ---------- sample polyline and assign channels ----------
 
 def _load_polyline_lonlatalt(geojson_path: Path) -> List[Tuple[float, float, Optional[float]]]:
     """
@@ -104,9 +111,11 @@ def _build_chainage(pts_llz: List[Tuple[float, float, Optional[float]]]) -> Tupl
     alts = [p[2] for p in pts_llz]
 
     cum = [0.0]
+
     for i in range(1, len(pts_llz)):
-        d = _horiz_distance_m(lats[i-1], lons[i-1], lats[i], lons[i])
-        cum.append(cum[-1] + d)
+            dxy = _horiz_distance_m(lats[i-1], lons[i-1], lats[i], lons[i])
+            dz  = alts[i] - alts[i-1]
+            cum.append(cum[-1] + math.hypot(dxy, dz))
     return lats, lons, alts, cum
 
 def _nearest_chainage_to(lats: List[float], lons: List[float], cum: List[float], lat0: float, lon0: float) -> float:
@@ -146,6 +155,15 @@ def _sample_polyline(lats: List[float], lons: List[float], alts: List[float], cu
     alt = _interp(alts[lo], alts[hi], t)
     return lat, lon, alt
 
+def _check_spacing_block(out: Dict[int, List[float]], start: int, n: int = 6):
+    for k in range(n):
+        a = out[start + k]
+        b = out[start + k + 1]
+        dxy = _horiz_distance_m(a[0], a[1], b[0], b[1])
+        dz  = b[2] - a[2]
+        d3  = math.hypot(dxy, dz)
+        print(f"ch{start+k}->{start+k+1}: {d3:.4f} m")
+
 def compute_channel_positions(
     geojson_path: str | Path,
     channel_count: int,
@@ -180,14 +198,24 @@ def compute_channel_positions(
     """
     geojson_path = Path(geojson_path)
     pts = _load_polyline_lonlatalt(geojson_path)
-    lats, lons, alts_raw, cum = _build_chainage(pts)
 
-    # alt handling: copy to floats, fill missing/zero if desired
-    alts: List[float] = [0.0 if (z is None) else float(z) for z in alts_raw]
+    lons = [p[0] for p in pts]
+    lats = [p[1] for p in pts]
+    alts = [0.0 if (p[2] is None) else float(p[2]) for p in pts]
+
     if interpolate_missing_alts:
         _interpolate_alts_inplace(alts, treat_zero_as_missing=True)
 
+    # Rebuild pts with filled alts so BOTH chainage and sampling see the same alts
+    pts_filled = list(zip(lons, lats, alts))  # (lon, lat, alt_filled)
+
+    # ---------- Build cumulative distance AFTER filling alts ----------
+    # IMPORTANT: your _build_chainage(...) must compute *3D* cumdist:
+    #    d3 = hypot(_horiz_distance_m(...), dz)
+    lats, lons, alts, cum = _build_chainage(pts_filled)
+
     total_len = cum[-1]
+
 
     # pick chainage of channel 0
     if origin == "start":
@@ -210,9 +238,14 @@ def compute_channel_positions(
     # build each channel position
     out: Dict[int, List[float]] = {}
     for ch in range(channel_count):
-        s = chain0 + ch * channel_distance
-        # clamp to cable length
-        s = max(0.0, min(total_len, s))
+        s = max(0.0, min(total_len, chain0 + ch * channel_distance))
         lat, lon, alt = _sample_polyline(lats, lons, alts, cum, s)
         out[ch] = [lat, lon, alt]
+    
+    _check_spacing_block(out, 101)
+    _check_spacing_block(out, 201)
+    _check_spacing_block(out, 301)
+    _check_spacing_block(out, 401)
+    _check_spacing_block(out, 501)
+
     return out

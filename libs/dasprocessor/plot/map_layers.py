@@ -7,11 +7,17 @@ import math
 import numpy as np
 import folium
 
+from typing import Dict, Any, List, Tuple
+
+
 from dasprocessor.constants import get_run
-from dasprocessor.bearing_tools import (
-    build_subarrays,
-    subarray_centers_and_headings,
-)
+
+
+# from dasprocessor.bearing_tools import (
+#     build_subarrays,
+#     subarray_centers_and_headings,
+# )
+
 
 from dasprocessor.channel_gps import compute_channel_positions
 
@@ -145,60 +151,62 @@ def add_channel_positions_layer(
 # SUBARRAY CENTERS + HEADINGS
 # ---------------------------------------------------------------------------
 
-def add_subarray_centers_layer(
-    m: folium.Map,
-    centers: list[int],
-    aperture_len: int,
-    run_number: int,
-    name: str = "Subarray centers + headings",
-    color: str = "#1f77b4",
-    show: bool = True,
-) -> folium.FeatureGroup:
-    """Add markers + heading lines for all subarrays."""
-    layer = folium.FeatureGroup(name=name, show=show)
-    subarrays = build_subarrays(centers, aperture_len, run_number)
-    cable_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\cable-layout.json")
-    gps = compute_channel_positions(cable_path, channel_count=1200, channel_distance=1.02)
-    meta = {}
-    for center_ch, ch_list in subarrays.items():
-        if not ch_list:
-            # skip empty lists (or raise if that's unexpected)
-            continue
 
-        first_ch = ch_list[0]
-        last_ch  = ch_list[-1]
 
-        heading_deg, (lat_center, lon_center, _alt_center) = channel_heading_and_center(
-            first_ch, last_ch, gps
-        )
+# def add_subarray_centers_layer(
+#     m: folium.Map,
+#     centers: list[int],
+#     aperture_len: int,
+#     run_number: int,
+#     name: str = "Subarray centers + headings",
+#     color: str = "#1f77b4",
+#     show: bool = True,
+# ) -> folium.FeatureGroup:
+#     """Add markers + heading lines for all subarrays."""
+#     layer = folium.FeatureGroup(name=name, show=show)
+#     subarrays = build_subarrays(centers, aperture_len, run_number)
+#     cable_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\cable-layout.json")
+#     gps = compute_channel_positions(cable_path, channel_count=1200, channel_distance=1.02)
+#     meta = {}
+#     for center_ch, ch_list in subarrays.items():
+#         if not ch_list:
+#             # skip empty lists (or raise if that's unexpected)
+#             continue
 
-        meta[center_ch] = {
-            "center_lat": float(lat_center),
-            "center_lon": float(lon_center),
-            "heading_deg": float(heading_deg),
-        }
-    run = get_run(DATE_STR, run_number)
-    aperture_length_m = (aperture_len - 1) * float(run["channel_distance"])
+#         first_ch = ch_list[0]
+#         last_ch  = ch_list[-1]
 
-    for c in centers:
-        info = meta.get(c)
-        if not info:
-            continue
-        lat, lon, hdg = float(info["center_lat"]), float(info["center_lon"]), float(info["heading_deg"])
-        folium.CircleMarker(
-            [lat, lon],
-            radius=4,
-            color=color,
-            fill=True,
-            fill_opacity=0.9,
-            popup=f"center={c}, heading={hdg:.2f}°, length={aperture_length_m:.1f} m",
-        ).add_to(layer)
-        if math.isfinite(hdg):
-            (lat1, lon1), (lat2, lon2) = endpoints_centered(lat, lon, hdg, aperture_length_m)
-            folium.PolyLine([[lat1, lon1], [lat2, lon2]], color=color, weight=4, opacity=0.9).add_to(layer)
+#         heading_deg, (lat_center, lon_center, _alt_center) = channel_heading_and_center(
+#             first_ch, last_ch, gps
+#         )
 
-    layer.add_to(m)
-    return layer
+#         meta[center_ch] = {
+#             "center_lat": float(lat_center),
+#             "center_lon": float(lon_center),
+#             "heading_deg": float(heading_deg),
+#         }
+#     run = get_run(DATE_STR, run_number)
+#     aperture_length_m = (aperture_len - 1) * float(run["channel_distance"])
+
+#     for c in centers:
+#         info = meta.get(c)
+#         if not info:
+#             continue
+#         lat, lon, hdg = float(info["center_lat"]), float(info["center_lon"]), float(info["heading_deg"])
+#         folium.CircleMarker(
+#             [lat, lon],
+#             radius=4,
+#             color=color,
+#             fill=True,
+#             fill_opacity=0.9,
+#             popup=f"center={c}, heading={hdg:.2f}°, length={aperture_length_m:.1f} m",
+#         ).add_to(layer)
+#         if math.isfinite(hdg):
+#             (lat1, lon1), (lat2, lon2) = endpoints_centered(lat, lon, hdg, aperture_length_m)
+#             folium.PolyLine([[lat1, lon1], [lat2, lon2]], color=color, weight=4, opacity=0.9).add_to(layer)
+
+#     layer.add_to(m)
+#     return layer
 
 
 # ---------------------------------------------------------------------------
@@ -210,13 +218,75 @@ from dasprocessor.plot.source_track import (
     build_source_track_layer,
     build_transmission_points_layer,
 )
-# These are already great and return FeatureGroups, so just import & reexport.
+# These are already great and return FeatureGroups
 
 
 __all__ = [
     "add_cable_layout_layer",
     "add_channel_positions_layer",
-    "add_subarray_centers_layer",
+    #"add_subarray_centers_layer",
     "build_source_track_layer",
     "build_transmission_points_layer",
 ]
+
+
+# ---------------------------------------------------------------------------
+# DOA RAYS
+# ---------------------------------------------------------------------------
+
+
+from dasprocessor.enu_geodetic import enu_offset_to_geodetic
+
+
+def build_doa_layer_from_results(
+    doa_packet_dict: Dict[int, Dict[str, Any]],
+    name: str = "DOA rays",
+    line_length_m: float = 10_000.0,
+    direction: str = "away",      # "toward" the source (-u) or "away" (+u)
+    color: str = "#00aa88",
+    weight: int = 3,
+) -> folium.FeatureGroup:
+    """
+    Build a Folium layer with 2D DOA rays for a single packet.
+    Input is the per-packet dict, i.e. out[desired_packet] from your DOA solver.
+
+    Draws a straight geodesic great-circle segment between the ENU origin and
+    the end point corresponding to the horizontal projection of the unit vector.
+    """
+    fg = folium.FeatureGroup(name=name, show=True)
+
+    for startch, subset in doa_packet_dict.items():
+        doa = subset.get("doa_relative_to_array")
+        if not doa or "u_enu" not in doa or "enu_origin" not in doa:
+            continue
+
+        u = np.array(doa["u_enu"], float)
+        if direction == "toward":
+            u = -u
+
+        # 2D ground-track: discard Up, renormalize horizontal part
+        u[2] = 0.0
+        hnorm = np.linalg.norm(u[:2])
+        if hnorm < 1e-12:
+            # near-vertical, skip
+            continue
+        u /= hnorm
+
+        origin_geo = (
+            float(doa["enu_origin"]["lat_deg"]),
+            float(doa["enu_origin"]["lon_deg"]),
+            float(doa["enu_origin"]["alt_m"]),
+        )
+        end_enu = u * float(line_length_m)
+        end_geo = enu_offset_to_geodetic(end_enu, origin_geo)
+
+        coords = [(origin_geo[0], origin_geo[1]), (end_geo[0], end_geo[1])]  # (lat, lon)
+        tooltip = (
+            f"startch {startch} • az={doa.get('az_deg', float('nan')):.1f}° "
+            f"• el={doa.get('el_deg', float('nan')):.1f}° "
+            f"• rms={doa.get('residual_rms_s', float('nan')):.4f}s"
+        )
+        folium.PolyLine(coords, color=color, weight=weight, tooltip=tooltip).add_to(fg)
+        folium.CircleMarker(coords[0], radius=3, color=color, fill=True, fill_opacity=1.0).add_to(fg)
+
+    return fg

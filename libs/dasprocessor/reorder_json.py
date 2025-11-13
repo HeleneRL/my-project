@@ -1,4 +1,4 @@
-#libs\dasprocessor\scripts\reorder_json.py
+#libs\dasprocessor\reorder_json.py
 
 import json
 from pathlib import Path
