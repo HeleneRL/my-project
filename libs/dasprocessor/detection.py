@@ -170,18 +170,13 @@ def main():
     band = argv[2] if len(argv) > 2 else "B_4"
     myrun = deepcopy(get_run("2024-05-03", choicerun))
 
-    #shorten time range for testing
-    #start_h, start_m, start_s = myrun["time_range"][0]
-    #myrun["time_range"] = (
-    #    (start_h, start_m, start_s),
-    #    (start_h, start_m + 3, start_s)  # +3 minutes
-    #)
+
     #print("Using time_range:", myrun["time_range"])
     meta = get_trial_day_metadata("2024-05-03")
     myrun["offset_in_samples"] += meta["signal_starting_points"][
         meta["signal_sequence"].index(band)]
     #for it in range(300, 312, 12):
-    for it in [76]: 
+    for it in [16]: 
         wantedchans = slice(it, it+12)
         mydata = load_interrogator_data(
                 r"D:\DASComms_25kHz_GL_2m\20240503\dphi",
@@ -238,7 +233,7 @@ def main():
                                         
                                             },
                                             myrun,
-                                            5000) #tolerance in samples, 500m/1475m/s*25000sps ≈ 8475 samples
+                                            7500) #tolerance in samples, 500m/1475m/s*25000sps ≈ 8475 samples
         print(f"Detected peaks map for channels {wantedchans.start} to {wantedchans.stop-1}:")
         
         savepath = Path(__file__).resolve().parent / f"../resources/{band}/peaks-{wantedchans.start}-{wantedchans.stop}-run{choicerun}-HeleneTweaks.json"
@@ -247,10 +242,10 @@ def main():
         save_peaks(savepath, mypeaks)
         print(f"✅ Saved: {savepath}")
 
-        # # choose a channel inside the slice to inspect (e.g., first in the slice)
-        # ch_global = wantedchans.start          # e.g., 148
-        # ch_local  = ch_global - wantedchans.start  # 0-based within the loaded block
-        # selected_map = mypeaks.get(ch_global, {})  # {packet_id: corr_index}
+        # choose a channel inside the slice to inspect (e.g., first in the slice)
+        ch_global = wantedchans.start          # e.g., 148
+        ch_local  = ch_global - wantedchans.start  # 0-based within the loaded block
+        selected_map = mypeaks.get(ch_global, {})  # {packet_id: corr_index}
 
 
 

@@ -1,0 +1,151 @@
+[
+  {
+    "receiver_min": 20,
+    "receiver_max": 40,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": 63.503564678473474,
+    "theta_deg_norm": 63.50356467847348,
+    "z_h": 14.919022713021082,
+    "n_measurements": 365,
+    "theta_deg_continuous": 63.50356467847348
+  },
+  {
+    "receiver_min": 40,
+    "receiver_max": 60,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": 14.526822355087443,
+    "theta_deg_norm": 14.526822355087432,
+    "z_h": 6.080689355803422,
+    "n_measurements": 583,
+    "theta_deg_continuous": 14.526822355087432
+  },
+  {
+    "receiver_min": 60,
+    "receiver_max": 80,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -35.75971408595336,
+    "theta_deg_norm": -35.75971408595336,
+    "z_h": -2.5070677009691806,
+    "n_measurements": 559,
+    "theta_deg_continuous": -35.75971408595336
+  },
+  {
+    "receiver_min": 80,
+    "receiver_max": 100,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": 76.6661174987113,
+    "theta_deg_norm": 76.66611749871129,
+    "z_h": -10.139147219374578,
+    "n_measurements": 567,
+    "theta_deg_continuous": -103.33388250128871
+  },
+  {
+    "receiver_min": 100,
+    "receiver_max": 120,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": 1.2541789763042748,
+    "theta_deg_norm": 1.2541789763042743,
+    "z_h": -17.3881270084741,
+    "n_measurements": 476,
+    "theta_deg_continuous": -178.74582102369573
+  },
+  {
+    "receiver_min": 120,
+    "receiver_max": 140,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -17.42992404644306,
+    "theta_deg_norm": -17.429924046443062,
+    "z_h": -22.36505109137864,
+    "n_measurements": 516,
+    "theta_deg_continuous": -197.42992404644306
+  },
+  {
+    "receiver_min": 140,
+    "receiver_max": 160,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -24.07561350377155,
+    "theta_deg_norm": -24.075613503771535,
+    "z_h": -25.09802914569807,
+    "n_measurements": 387,
+    "theta_deg_continuous": -204.07561350377154
+  },
+  {
+    "receiver_min": 160,
+    "receiver_max": 180,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -11.781522410729337,
+    "theta_deg_norm": -11.781522410729337,
+    "z_h": -29.21862803676953,
+    "n_measurements": 436,
+    "theta_deg_continuous": -191.78152241072934
+  },
+  {
+    "receiver_min": 180,
+    "receiver_max": 200,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -65.91586947305082,
+    "theta_deg_norm": -65.91586947305082,
+    "z_h": -34.281434559317006,
+    "n_measurements": 368,
+    "theta_deg_continuous": -245.9158694730508
+  },
+  {
+    "receiver_min": 200,
+    "receiver_max": 220,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -436.4931519521767,
+    "theta_deg_norm": -76.49315195217667,
+    "z_h": -38.41434763007271,
+    "n_measurements": 297,
+    "theta_deg_continuous": -256.4931519521767
+  },
+  {
+    "receiver_min": 220,
+    "receiver_max": 240,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": 439.05037572763604,
+    "theta_deg_norm": 79.05037572763604,
+    "z_h": -42.09671043354024,
+    "n_measurements": 265,
+    "theta_deg_continuous": -280.94962427236396
+  },
+  {
+    "receiver_min": 240,
+    "receiver_max": 260,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -0.4411723123381972,
+    "theta_deg_norm": -0.4411723123382103,
+    "z_h": -45.779082139916795,
+    "n_measurements": 345,
+    "theta_deg_continuous": -360.4411723123382
+  },
+  {
+    "receiver_min": 260,
+    "receiver_max": 280,
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "theta_deg": -325.4946735870069,
+    "theta_deg_norm": 34.5053264129931,
+    "z_h": -49.224762122137264,
+    "n_measurements": 400,
+    "theta_deg_continuous": -325.4946735870069
+  },
+  {
+    "receiver_min": 280,
+    "receiver_max": 300,
+    "success": false,
+    "reason": "no_receivers"
+  }
+]

@@ -44,6 +44,11 @@ def main():
 
     # List all your run-2 JSON files here
     files = [
+        root / "peaks-16-28-run2-HeleneTweaks.json",
+        root / "peaks-28-40-run2-HeleneTweaks.json",
+        root / "peaks-40-52-run2-HeleneTweaks.json",
+        root / "peaks-52-64-run2-HeleneTweaks.json",
+        root / "peaks-64-76-run2-HeleneTweaks.json",
         root / "peaks-76-88-run2-HeleneTweaks.json",
         root / "peaks-88-100-run2-HeleneTweaks.json",
         root / "peaks-100-112-run2-HeleneTweaks.json",

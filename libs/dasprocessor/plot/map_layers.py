@@ -9,8 +9,16 @@ import folium
 
 from typing import Dict, Any, List, Tuple
 
+import folium
+import numpy as np
+from typing import Iterable, Optional, Union
+
+from pymap3d import enu2geodetic, geodetic2enu
 
 from dasprocessor.constants import get_run
+
+
+
 
 
 # from dasprocessor.bearing_tools import (
@@ -21,7 +29,7 @@ from dasprocessor.constants import get_run
 
 from dasprocessor.channel_gps import compute_channel_positions
 
-from dasprocessor.channel_segment_heading import channel_heading_and_center
+#from dasprocessor.delete_check.channel_segment_heading import channel_heading_and_center
 
 
 
@@ -147,66 +155,115 @@ def add_channel_positions_layer(
     return layer
 
 
+
+
+def add_track_points_layer(
+    m: folium.Map, 
+    track_points: dict,
+    name: str = "Track points",
+    color: str = "#FF5733",
+    show: bool = True,
+    packet: int | None = None,   # NEW
+) -> folium.FeatureGroup:
+    """Add boat track points as circle markers.
+    
+    If packet is None → plot all packets.
+    If packet is an int → only plot that packet's centroids.
+    """
+    layer = folium.FeatureGroup(name=name, show=show)
+
+    # ENU->geodetic reference
+    ref_lat = 63.44066810482363
+    ref_lon = 10.348900931057011
+    ref_alt = 0.0
+
+    # --- Decide which packets to show ---
+    if packet is None:
+        # Use all packets
+        pkt_items = track_points.items()
+    else:
+        # Only show selected packet (if it exists)
+        key = str(packet)
+        if key in track_points:
+            pkt_items = [(key, track_points[key])]
+        else:
+            print(f"[add_track_points_layer] Packet {packet} not in track_points, nothing to plot.")
+            pkt_items = []
+
+    # --- Plot the points ---
+    for pkt_key, enu_list in pkt_items:
+        for enu_coord in enu_list:
+            centroid = np.asarray(enu_coord, float)
+            lat, lon, alt = enu2geodetic(
+                centroid[0], centroid[1], centroid[2],
+                ref_lat, ref_lon, ref_alt
+            )
+            # Draw your circle marker
+            folium.CircleMarker(
+                [lat, lon],
+                radius=3,
+                color=color,
+                fill=True,
+                fill_opacity=0.9,
+            ).add_to(layer)
+
+            # Add always-visible text label
+            folium.map.Marker(
+                [lat, lon],
+                icon=folium.DivIcon(
+                    html=f"""<div style="font-size: 12px; color: black;
+                                        white-space: nowrap;">
+                                {pkt_key}
+                            </div>"""
+                )
+            ).add_to(layer)
+
+    layer.add_to(m)
+    return layer
+
+
+
+
+
+
 # ---------------------------------------------------------------------------
-# SUBARRAY CENTERS + HEADINGS
+# SUBARRAYS
 # ---------------------------------------------------------------------------
 
 
 
-# def add_subarray_centers_layer(
-#     m: folium.Map,
-#     centers: list[int],
-#     aperture_len: int,
-#     run_number: int,
-#     name: str = "Subarray centers + headings",
-#     color: str = "#1f77b4",
-#     show: bool = True,
-# ) -> folium.FeatureGroup:
-#     """Add markers + heading lines for all subarrays."""
-#     layer = folium.FeatureGroup(name=name, show=show)
-#     subarrays = build_subarrays(centers, aperture_len, run_number)
-#     cable_path = Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\cable-layout.json")
-#     gps = compute_channel_positions(cable_path, channel_count=1200, channel_distance=1.02)
-#     meta = {}
-#     for center_ch, ch_list in subarrays.items():
-#         if not ch_list:
-#             # skip empty lists (or raise if that's unexpected)
-#             continue
+def add_subarray_layer(
+    m: folium.Map,
+    start_channel: list,
+    array_length: int,
+    channels_gps: dict,
+    name: str = "Subarrays",
+    color: str = "#FF5733",
+    show: bool = True,
+) -> folium.FeatureGroup:
+    
+    layer = folium.FeatureGroup(name=name, show=show)
 
-#         first_ch = ch_list[0]
-#         last_ch  = ch_list[-1]
+    subarrays = {}
+    for start_ch in start_channel:
+        channels_in_subarray = [start_ch + i for i in range(array_length)]
+        subarrays[start_ch] = channels_in_subarray
 
-#         heading_deg, (lat_center, lon_center, _alt_center) = channel_heading_and_center(
-#             first_ch, last_ch, gps
-#         )
+    
+    for start_ch, channels in subarrays.items():
+        for ch in channels:
+            lat, lon = channels_gps[ch][0], channels_gps[ch][1]
+            folium.CircleMarker(
+                [lat, lon],
+                radius=4,
+                color=color,
+                fill=True,
+                fill_opacity=0.9,
+                popup=f"subarray starting at channel {start_ch}, length={array_length}, subarray channel {ch}",
+            ).add_to(layer)
 
-#         meta[center_ch] = {
-#             "center_lat": float(lat_center),
-#             "center_lon": float(lon_center),
-#             "heading_deg": float(heading_deg),
-#         }
-#     run = get_run(DATE_STR, run_number)
-#     aperture_length_m = (aperture_len - 1) * float(run["channel_distance"])
-
-#     for c in centers:
-#         info = meta.get(c)
-#         if not info:
-#             continue
-#         lat, lon, hdg = float(info["center_lat"]), float(info["center_lon"]), float(info["heading_deg"])
-#         folium.CircleMarker(
-#             [lat, lon],
-#             radius=4,
-#             color=color,
-#             fill=True,
-#             fill_opacity=0.9,
-#             popup=f"center={c}, heading={hdg:.2f}°, length={aperture_length_m:.1f} m",
-#         ).add_to(layer)
-#         if math.isfinite(hdg):
-#             (lat1, lon1), (lat2, lon2) = endpoints_centered(lat, lon, hdg, aperture_length_m)
-#             folium.PolyLine([[lat1, lon1], [lat2, lon2]], color=color, weight=4, opacity=0.9).add_to(layer)
-
-#     layer.add_to(m)
-#     return layer
+    layer.add_to(m)
+    return layer
 
 
 # ---------------------------------------------------------------------------
@@ -237,13 +294,7 @@ __all__ = [
 
 
 
-import folium
-import numpy as np
-from typing import Iterable, Optional, Union
 
-
-
-from pymap3d import enu2geodetic, geodetic2enu
 
 
 def _get_field(obj, name, default=None):
@@ -375,5 +426,161 @@ def build_doa_layer_from_results(
             tooltip=f"DOA center (packet {packet})",
         ).add_to(fg)
 
+        ellipse = _get_field(res, "ellipse_latlon", None)
+        if ellipse:
+            folium.PolyLine(
+                locations=[(lat, lon) for lat, lon in ellipse],
+                color="#ff8800",
+                weight=2,
+                opacity=0.6,
+                tooltip=f"DOA cone intersection (packet {packet})",
+            ).add_to(fg)
+
     return fg
+
+
+
+
+
+##### build ellipse and uncertainty band ##############333
+
+
+def add_band_between_lines(
+    m: folium.Map,
+    inner_llh,
+    outer_llh,
+    color="#E62A15",
+    fill_opacity=0.3,
+    name="uncertainty band",
+    show=True,
+):
+    """
+    inner_llh, outer_llh: lists of (lat, lon) along inner and outer boundaries.
+    """
+    # Build polygon coords: outer forward, inner reversed
+    # Folium expects [lat, lon] for locations
+    poly_coords = []
+
+    # Outer boundary
+    for (lat, lon) in outer_llh:
+        poly_coords.append([lat, lon])
+
+    # Inner boundary reversed
+    for (lat, lon) in reversed(inner_llh):
+        poly_coords.append([lat, lon])
+
+    # Close polygon (optional, Leaflet will close it automatically)
+    if poly_coords[0] != poly_coords[-1]:
+        poly_coords.append(poly_coords[0])
+
+    layer = folium.FeatureGroup(name=name, show=show)
+
+    folium.Polygon(
+        locations=poly_coords,
+        color=color,          # outline color
+        weight=1,
+        fill=True,
+        fill_color=color,
+        fill_opacity=fill_opacity,
+        tooltip=f"{name}",
+    ).add_to(layer)
+
+    layer.add_to(m)
+    return layer
+
+
+
+def add_ellipse_layer(
+    m: folium.Map,
+    enu_points: dict,
+    name: str = "ellipse",
+    color: str = "#E62A15",
+    show: bool = True,
+    marker_every: int = 0,
+) -> folium.FeatureGroup:
+
+    layer = folium.FeatureGroup(name=name, show=show)
+
+    # # 1) Load plain list of ENU points
+    # with json_path.open("r", encoding="utf-8") as fh:
+    #     enu_points = json.load(fh)   # expected: {"inner_points": [...], "nominal_points": [...], "outer_points": [...]}
+    
+    inner_points = np.asarray(enu_points["inner_points"], dtype=float)
+    nominal_points = np.asarray(enu_points["nominal_points"], dtype=float)
+    outer_points = np.asarray(enu_points["outer_points"], dtype=float)
+
+
+    # Reference for ENU -> geodetic
+    ref_lat = 63.44066810482363
+    ref_lon = 10.348900931057011
+    ref_alt = 0.0
+
+    # 2) Convert ENU -> geodetic (lat, lon, alt)
+    llh_inner_points = []
+    for el in inner_points:
+        lat, lon, alt = enu2geodetic(el[0], el[1], el[2], ref_lat, ref_lon, ref_alt)
+        llh_inner_points.append((lat, lon, alt))
+
+    print(f"Adding {len(llh_inner_points)} ellipse points to map layer '{name}'")
+
+    llh_nominal_points = []
+    for el in nominal_points:
+        lat, lon, alt = enu2geodetic(el[0], el[1], el[2], ref_lat, ref_lon, ref_alt)
+        llh_nominal_points.append((lat, lon, alt))
+    
+    llh_outer_points = []
+    for el in outer_points:
+        lat, lon, alt = enu2geodetic(el[0], el[1], el[2], ref_lat, ref_lon, ref_alt)
+        llh_outer_points.append((lat, lon, alt))
+
+    # # 3) Plot nominal ellipse line
+    # folium.PolyLine(
+    #     locations=[(lat, lon) for (lat, lon, alt) in llh_nominal_points],
+    #     color="#46f20d",
+    #     weight=3,
+    #     opacity=0.9,
+    #     tooltip=f"DOA Ellipse",
+    # ).add_to(layer)
+
+    add_band_between_lines(
+        m,
+        [(lat, lon) for (lat, lon, alt) in llh_inner_points],
+        [(lat, lon) for (lat, lon, alt) in llh_outer_points],
+        name=name,
+    )
+
+    # folium.PolyLine(
+    #     locations=[(lat, lon) for (lat, lon, alt) in llh_outer_points],
+    #     color=color,
+    #     weight=2,
+    #     opacity=0.6,
+    #     tooltip=f"DOA Ellipse Outer Bound",
+    # ).add_to(layer)
+
+    # folium.PolyLine(
+    #     locations=[(lat, lon) for (lat, lon, alt) in llh_inner_points],
+    #     color=color,
+    #     weight=2,
+    #     opacity=0.6,
+    #     tooltip=f"DOA Ellipse Inner Bound",
+    # ).add_to(layer)
+
+
+
+    # for (lat, lon, alt) in llh_inner_points:
+    #     folium.CircleMarker(
+    #         location=[lat, lon],
+    #         radius=3,
+    #         color="#17DA14",
+    #         fill=True,
+    #         fill_opacity=0.9,
+    #     ).add_to(layer)
+
+
+
+    #layer.add_to(m)
+    return layer
+
+
+import folium
 

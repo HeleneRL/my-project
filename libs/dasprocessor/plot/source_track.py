@@ -7,6 +7,8 @@ import csv
 from datetime import datetime, timedelta
 import numpy as np 
 
+import json
+
 
 import folium
 
@@ -29,7 +31,7 @@ def _run_datetime_bounds(run_number: int) -> Tuple[datetime, datetime]:
     stop  = datetime.fromisoformat(f"{DATE_STR} {h2:02d}:{m2:02d}:{s2:02d}")
     return start, stop
 
-
+'''
 def load_source_points_for_run(csv_path: Path, run_number: int) -> List[Tuple[float, float, datetime]]:
     """
     Load (lat, lon, dt) points from the CSV for the given run's time window.
@@ -49,6 +51,26 @@ def load_source_points_for_run(csv_path: Path, run_number: int) -> List[Tuple[fl
                 out.append((lat, lon, dt))
             except Exception:
                 # skip malformed rows silently
+                continue
+    return out
+'''
+
+def load_source_points_for_run(csv_path: Path, run_number: int):
+    start_dt, stop_dt = _run_datetime_bounds(run_number)
+    margin = timedelta(minutes=3)  # or 5 minutes if drift happens
+
+    out = []
+    with csv_path.open("r", newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            try:
+                dt = _parse_iso_dt(row["datetime"])
+                if not (start_dt - margin <= dt <= stop_dt + margin):
+                    continue
+                lat = float(row["lat"])
+                lon = float(row["lon"])
+                out.append((lat, lon, dt))
+            except:
                 continue
     return out
 
@@ -103,6 +125,21 @@ def _interp_positions_at_times(
         out.append((float(lat_q[j]), float(lon_q[j]), query_times[i], i))
         j += 1
 
+    # ---------------------------------------------------
+    # Save JSON for debugging — does NOT modify the return
+    # ---------------------------------------------------
+    with open("interp_debug.json", "w") as f:
+        json.dump(
+            [
+                [lat, lon, dt.isoformat(), idx]
+                for (lat, lon, dt, idx) in out
+            ],
+            f,
+            indent=2
+        )
+    # ---------------------------------------------------
+
+    return out
     return out
 
 

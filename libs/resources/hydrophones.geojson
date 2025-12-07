@@ -1,0 +1,203 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317837222950388,
+          63.47722055996302,
+          -39.46051042593142
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "80",
+        "local_x": -1728.8285547404862,
+        "local_y": 4084.0595635782183,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317816915337499,
+          63.47722168917505,
+          -39.46015589317921
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "81",
+        "local_x": -1729.8406900968923,
+        "local_y": 4084.185983593694,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317796607723007,
+          63.47722281838423,
+          -39.45980119695078
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "82",
+        "local_x": -1730.8528254532982,
+        "local_y": 4084.3124036091695,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317776300106917,
+          63.4772239475905,
+          -39.459446337661994
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "83",
+        "local_x": -1731.8649608097044,
+        "local_y": 4084.438823624645,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317755992489229,
+          63.4772250767939,
+          -39.459091317187415
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "84",
+        "local_x": -1732.8770961661103,
+        "local_y": 4084.5652436401206,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.31773568486994,
+          63.47722620599442,
+          -39.45873613240482
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "85",
+        "local_x": -1733.8892315225164,
+        "local_y": 4084.691663655596,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317715377249051,
+          63.477227335192055,
+          -39.45838078643491
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "86",
+        "local_x": -1734.9013668789223,
+        "local_y": 4084.8180836710717,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317695069626563,
+          63.47722846438681,
+          -39.45802527761412
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "87",
+        "local_x": -1735.9135022353285,
+        "local_y": 4084.9445036865473,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317674762002477,
+          63.477229593578684,
+          -39.457669605525034
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "88",
+        "local_x": -1736.9256375917344,
+        "local_y": 4085.070923702023,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.31765445437679,
+          63.4772307227677,
+          -39.4573137710025
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "89",
+        "local_x": -1737.9377729481405,
+        "local_y": 4085.1973437174984,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.317634146749503,
+          63.477231851953796,
+          -39.45695777383396
+        ]
+      },
+      "properties": {
+        "hydrophone_id": "90",
+        "local_x": -1738.9499083045464,
+        "local_y": 4085.323763732974,
+        "depth": -41.0,
+        "theta_deg": -547.1196150549761
+      }
+    }
+  ]
+}

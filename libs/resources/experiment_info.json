@@ -1,0 +1,61 @@
+{
+  "2024-05-03": {
+    "1": {
+      "time_range": [[10, 59, 19], [11, 47, 29]],
+      "offset_in_samples": 146000,
+      "sample_rate": 25000,
+      "gauge_length": 2.04,
+      "transmitter_altitude": -5,
+      "channel_distance": 1.02,
+      "channel_count": 1200,
+      "sequence_start": [10, 59, 24],
+      "sequence_count": 128,
+      "sequence_period": 562500,
+      "cumulative_sequence_start": 0,
+      "source_signal_window": [12800000, 204800000],
+      "source_position_file": "ellyandcable-firstrun.npz"
+    },
+    "2": {
+      "time_range": [[12, 12, 23], [13, 0, 33]],
+      "offset_in_samples": 120000,
+      "sample_rate": 25000,
+      "gauge_length": 2.04,
+      "transmitter_altitude": -30,
+      "channel_distance": 1.02,
+      "channel_count": 1200,
+      "sequence_start": [12, 12, 26],
+      "sequence_count": 128,
+      "sequence_period": 562500,
+      "cumulative_sequence_start": 128,
+      "source_signal_window": [288000000, 486400000],
+      "source_position_file": "ellyandcable-secondrun.npz"
+    },
+    "3": {
+      "time_range": [[13, 9, 50], [13, 47, 10]],
+      "offset_in_samples": 118000,
+      "sample_rate": 25000,
+      "gauge_length": 4.08,
+      "transmitter_altitude": {
+        "0": -35,
+        "900": -25,
+        "1080": -20,
+        "1800": -15
+      },
+      "channel_distance": 2.04,
+      "channel_count": 600,
+      "sequence_start": [13, 9, 53],
+      "sequence_count": 99,
+      "sequence_period": 562500,
+      "cumulative_sequence_start": 256,
+      "source_signal_window": [512000000, 665600000],
+      "source_position_file": "ellyandcable-thirdrun.npz"
+    },
+    "metadata": {
+      "weather": "clear",
+      "receiver_2_coordinates": [63.4406, 10.3518, -60],
+      "signal_sequence": ["B_4", "B_2", "B", "C", "A", "chirp"],
+      "signal_starting_points": [0, 232500, 355000, 422500, 479000, 519000],
+      "sound_speed_profile_file": null
+    }
+  }
+}

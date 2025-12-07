@@ -1,0 +1,9 @@
+{
+  "B_4": { "fmin": 1240, "df": 20 },
+  "B_2": { "fmin": 2480, "df": 40 },
+  "B":   { "fmin": 4960, "df": 80 },
+  "C":   { "fmin": 8400, "df": 100 },
+  "A":   { "fmin": 9440, "df": 160 },
+  "baseline_chips": 176,
+  "janus_frequency_count": 26
+}

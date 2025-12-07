@@ -1,6 +1,6 @@
 # libs/dasprocessor/scripts/find_good_packets.py
 from pathlib import Path
-from dasprocessor.bearing_tools import (
+from dasprocessor.delete_check.bearing_tools import (
     load_merged_arrivals,
     build_subarrays,
     get_cached_channel_gps_for_run,

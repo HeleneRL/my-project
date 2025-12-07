@@ -12,6 +12,9 @@ from dasprocessor.plot.map_layers import (
     build_source_track_layer,
     build_transmission_points_layer,
     build_doa_layer_from_results,
+    add_ellipse_layer,
+    add_track_points_layer,
+    add_subarray_layer
 )
 # IMPORTANT: load the boat track points (lat, lon, dt) from here:
 from dasprocessor.plot.source_track import load_source_points_for_run
@@ -42,16 +45,12 @@ def main():
 
 
     path_list = [
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-75-105.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-100-130.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-150-180.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-180-210.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-220-250.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-245-275.json"),
-    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-328-358.json"),
+    Path(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\DOA_results-100-131.json"),
+
 ]
 
     channel_pos_geo = compute_channel_positions(geojson_path, channel_count=1200, channel_distance=1.02)
+
 
 
     filename = r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\B_4\channel_pos_geo.json"
@@ -71,7 +70,7 @@ def main():
     # Cable, channels, subarrays
     add_cable_layout_layer(m, geojson_path, name="Cable layout", color="#07035E", marker_every=25)
     add_channel_positions_layer(m, channel_pos_geo, name="Channels", color="#0A047D", draw_every=5)
-    #add_subarray_centers_layer(m, centers, aperture_len, run_number, name="Subarrays", color="#1f77b4")
+ 
     
     # ✅ Boat track (expects 3-tuples: lat, lon, dt)
     points = load_source_points_for_run(csv_path, run_number)
@@ -80,7 +79,53 @@ def main():
     # ✅ TX positions
     build_transmission_points_layer(csv_path, run_number, label_every=10, name="TX positions").add_to(m)
 
-    packets = 50  # only show DOA for this packet (set to None for all)
+
+    script_dir = Path(__file__).resolve().parent          # .../libs/dasprocessor/scripts
+    libs_dir = script_dir.parent.parent                   # .../libs
+
+    resources_dir = libs_dir / "resources" / "subarray_ellipses"        # .../libs/resources/subarray_ellipses
+
+    packet = "50"
+    uncertainty_deg = 5.0
+    arr_length = 30  # in meters
+    start_channel_lst = [70, 100, 245, 265]
+
+    def ellipse_path(start_ch: int) -> Path:
+        return resources_dir / f"ellipse_bands_start_ch_{start_ch}_arrlen_{arr_length}.json"
+    
+    ellipse_path_0 = ellipse_path(start_channel_lst[0])
+    ellipse_path_1 = ellipse_path(start_channel_lst[1])
+    ellipse_path_2 = ellipse_path(start_channel_lst[2])
+    ellipse_path_3 = ellipse_path(start_channel_lst[3])
+
+    with open(ellipse_path_0, 'r') as f:
+        ellipse_data_0 = json.load(f)
+    with open(ellipse_path_1, 'r') as f:
+        ellipse_data_1 = json.load(f)
+    with open(ellipse_path_2, 'r') as f:
+        ellipse_data_2 = json.load(f)
+    with open(ellipse_path_3, 'r') as f:
+        ellipse_data_3 = json.load(f)
+
+    
+
+    add_ellipse_layer(m, ellipse_data_0[packet], name=f"start_ch_{start_channel_lst[0]}_pkt_{packet}_unc_{uncertainty_deg}")
+    add_ellipse_layer(m, ellipse_data_1[packet], name=f"start_ch_{start_channel_lst[1]}_pkt_{packet}_unc_{uncertainty_deg}")
+    add_ellipse_layer(m, ellipse_data_2[packet], name=f"start_ch_{start_channel_lst[2]}_pkt_{packet}_unc_{uncertainty_deg}")
+    add_ellipse_layer(m, ellipse_data_3[packet], name=f"start_ch_{start_channel_lst[3]}_pkt_{packet}_unc_{uncertainty_deg}")
+
+
+    with open(r"C:\Users\helen\Documents\PythonProjects\my-project\libs\resources\track_estimate_from_doa.json", 'r') as file:
+        track_dict = json.load(file)
+
+
+
+
+    add_track_points_layer(m, track_dict, name="Estimated track from DOA", color="#33FF57", packet =50)
+
+    add_subarray_layer(m, start_channel=start_channel_lst, array_length=arr_length, channels_gps=channel_pos_geo, color="#FF5733")
+
+    packets = 100 # only show DOA for this packet (set to None for all)
 
     for el in path_list:
         print(f"Processing array DOA results from {el}")
@@ -93,11 +138,6 @@ def main():
             build_doa_layer_from_results(m, doa_results_small, name=f"DOA {el.stem[12:-1]}", packet_filter=packets).add_to(m)
         else:
             print(f"No DOA results file found at {el}")
-
-   
-
-    
-    
     
 
 
